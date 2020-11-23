@@ -52,7 +52,7 @@ public class CompletedTasks extends HttpServlet {
             writer.println("<td>" + "Категория задачи" + "</td>");
             writer.println("<td>" + "Срок выполнения" + "</td>");
             writer.println("<td>" + "Важность" + "</td>");
-            writer.println("</thead");
+            writer.println("</thead>");
             Statement stmt = connect.createStatement();
             writer.println("<tbody>");
             ResultSet resultSet = stmt.executeQuery("select * from completedtasks order by id desc;");

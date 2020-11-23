@@ -75,7 +75,7 @@ public class ToDoList extends HttpServlet {
             writer.println("</thead");
             String buttonValue = req.getParameter("button");
             String taskName = req.getParameter("TaskName");
-            if (buttonValue != null) {
+            if (buttonValue != null && count > 1) {
                 ResultSet buttVal = stmt.executeQuery("select * from uncompletedtasks;");
                 while (buttVal.next()) {
                     String value = buttVal.getString("id");
@@ -114,7 +114,7 @@ public class ToDoList extends HttpServlet {
                 printTaskTable(writer, connect);
             }
 
-            if (taskName != null) {
+            if (taskName != null && count > 1) {
                 resp.setContentType("text/html");
                 resp.setCharacterEncoding("utf-8");
                 req.setCharacterEncoding("utf-8");
