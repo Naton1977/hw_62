@@ -11,15 +11,15 @@ import java.sql.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ToDoList extends HttpServlet {
-    private AtomicInteger counter = new AtomicInteger();
     public static final String URL = "jdbc:mysql://localhost/ToDoList";
     public static final String USER = "root";
     public static final String PASSWORD = "";
-    String taskDescription;
-    String taskCategory;
-    String periodExecution;
-    String importance;
-    int importanceInt = 0;
+    private String taskDescription;
+    private String taskCategory;
+    private String periodExecution;
+    private String importance;
+    private int importanceInt = 0;
+    private String taskName;
 
 
     @Override
@@ -30,7 +30,6 @@ public class ToDoList extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        int count = counter.addAndGet(1);
         try (Connection connect = DriverManager.getConnection(URL, USER, PASSWORD);
              Statement stmt = connect.createStatement()) {
             connect.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
@@ -74,8 +73,7 @@ public class ToDoList extends HttpServlet {
             writer.println("<td>" + "Важность" + "</td>");
             writer.println("</thead");
             String buttonValue = req.getParameter("button");
-            String taskName = req.getParameter("TaskName");
-            if (buttonValue != null && count > 1) {
+            if (buttonValue != null) {
                 ResultSet buttVal = stmt.executeQuery("select * from uncompletedtasks;");
                 while (buttVal.next()) {
                     String value = buttVal.getString("id");
@@ -104,24 +102,19 @@ public class ToDoList extends HttpServlet {
                             connect.rollback();
                         }
                         connect.setAutoCommit(true);
-                        printTaskTable(writer, connect);
                     }
                 }
             }
 
-
-            if (count == 1) {
+            taskDescription = req.getParameter("TaskDescription");
+            taskCategory = req.getParameter("TaskCategory");
+            periodExecution = req.getParameter("PeriodExecution");
+            importance = req.getParameter("Importance");
+            taskName = req.getParameter("TaskName");
+            if(taskName == null){
                 printTaskTable(writer, connect);
             }
-
-            if (taskName != null && count > 1) {
-                resp.setContentType("text/html");
-                resp.setCharacterEncoding("utf-8");
-                req.setCharacterEncoding("utf-8");
-                taskDescription = req.getParameter("TaskDescription");
-                taskCategory = req.getParameter("TaskCategory");
-                periodExecution = req.getParameter("PeriodExecution");
-                importance = req.getParameter("Importance");
+            if (taskName != null) {
                 if (importance != null) {
                     try {
                         importanceInt = Integer.parseInt(importance);
@@ -130,10 +123,18 @@ public class ToDoList extends HttpServlet {
                     }
                 }
                 connect.setAutoCommit(false);
+                if (periodExecution.equals("")) {
+                    periodExecution = "2020-01-01";
+                }
+                if(importance.equals("")){
+                    importanceInt = 1;
+                }
                 try {
                     stmt.executeUpdate("insert into uncompletedtasks(TaskName, TaskDescription, TaskCategory, PeriodOfExecution, Importance) value('" + taskName + "', '" + taskDescription + "','" + taskCategory + "', '" + periodExecution + "', '" + importanceInt + "');");
                     connect.commit();
+                    taskName = null;
                 } catch (Exception e) {
+                    e.printStackTrace();
                     connect.rollback();
                 }
                 connect.setAutoCommit(true);
@@ -152,7 +153,7 @@ public class ToDoList extends HttpServlet {
             writer.println("window.addEventListener('load', clearButton )");
             writer.println("window.addEventListener('beforeunload',clearAll )");
             writer.println("</script>");
-            writer.println("<a href='/done'>Выполненные задания</a>");
+            writer.println("<a href='/"+getServletContext().getContextPath() +"done'>Выполненные задания</a>");
             writer.println(" </body>");
             writer.println("</html>");
 
